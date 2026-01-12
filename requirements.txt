@@ -1,0 +1,23 @@
+# Azure FinOps Cost Aggregator - Python Dependencies
+#
+# This project uses only Python standard library modules.
+# No external dependencies are required.
+#
+# Standard library modules used:
+# - os: File system operations
+# - json: JSON parsing
+# - re: Regular expression matching
+# - pathlib: Path manipulation
+# - collections: defaultdict for data structures
+# - typing: Type hints
+# - datetime: Timestamp generation
+#
+# Python version requirement: 3.7+
+#
+# To verify your Python version:
+#   python3 --version
+#
+# If you need to create a virtual environment (optional):
+#   python3 -m venv venv
+#   source venv/bin/activate  # On Linux/Mac
+#   venv\Scripts\activate     # On Windows
