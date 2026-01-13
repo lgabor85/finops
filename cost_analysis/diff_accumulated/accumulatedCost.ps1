@@ -2,6 +2,33 @@
 # This script compares costs between September and October and strips ANSI escape codes
 # for better readability in basic text editors
 
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$SourceMonth, # e.g., "2025-09"
+
+    [Parameter(Mandatory=$true)]
+    [string]$TargetMonth  # e.g., "2025-10"
+)
+
+## Calculate date ranges
+# Parse source month
+$sourceDate = [datetime]::ParseExact($SourceMonth, "yyyy-MM", $null)
+$fromSource = $sourceDate.ToString("yyyy-MM-01")
+$toSource = $sourceDate.AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd")
+
+# Parse target month
+$targetDate = [datetime]::ParseExact($TargetMonth, "yyyy-MM", $null)
+$fromTarget = $targetDate.ToString("yyyy-MM-01")
+$toTarget = $targetDate.AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd")
+
+## Create Dynamic Labes
+# Generate month names for display
+$sourceMonthName = $sourceDate.ToString("MMMM")
+$targetMonthName = $targetDate.ToString("MMMM")
+$sourceLabel = "Source: ($fromSource to $toSource)"
+$targetLabel = "Target: ($fromTarget to $toTarget)"
+
+
 $subs = az account list --query "[].id" -o tsv
 
 foreach ($id in $subs) {
