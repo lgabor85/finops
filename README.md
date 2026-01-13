@@ -1,22 +1,25 @@
-# Azure FinOps Cost Aggregator
+# Azure FinOps Cost Analysis Tools
 
-A comprehensive Python script that recursively searches for Azure cost data files, extracts amortized cost information, and generates detailed cost reports with month-over-month comparisons across all Azure subscriptions.
+A comprehensive collection of PowerShell scripts for Azure cost analysis, providing parameterized cost comparisons, anomaly detection, and detailed reporting across all Azure subscriptions.
 
 ## 🎯 Features
 
-- 🔍 **Recursive File Search**: Automatically finds all cost data files containing "diff" in `~/Downloads/finops`
-- 📊 **Multi-Source Data Extraction**: Parses both JSON and diff text files
-- 💰 **Cost Aggregation**: Combines costs across all Azure subscriptions
-- 📈 **Month-over-Month Analysis**: Compares November vs December 2025 costs
-- 📉 **Percentage Calculations**: Automatic change percentage calculations
-- 💵 **Currency Formatting**: Properly formatted EUR values with thousands separators
-- 📄 **Consolidated Reporting**: Single comprehensive output file
-- 🔐 **Subscription Tracking**: Extracts and tracks Azure subscription UUIDs
+- 📊 **Parameterized Cost Comparisons**: Compare any two months using command-line parameters
+- 💰 **Accumulated Cost Analysis**: Track total costs across time periods with ANSI-stripped output
+- 🔍 **Resource-Level Analysis**: Detailed cost breakdown by individual Azure resources
+- 🚨 **Anomaly Detection**: Automatically identify new costs, removed costs, and significant changes
+- 📈 **Top 50 Cost Increases**: Focus on the most impactful cost changes
+- 💵 **Multi-Currency Support**: Automatic currency detection and formatting
+- 📄 **Subscription-Based Reports**: Individual reports per subscription with friendly names
+- 🎨 **Clean Output**: ANSI escape codes and box-drawing characters stripped for readability
+- 🔐 **Multi-Subscription Support**: Process all Azure subscriptions automatically
 
 ## 📋 Requirements
 
-- Python 3.7 or higher
-- No external dependencies (uses only Python standard library)
+- PowerShell 5.1 or higher (PowerShell Core 7+ recommended)
+- [Azure Cost CLI](https://github.com/mivano/azure-cost-cli) installed and configured
+- Azure CLI (`az`) installed and authenticated
+- Access to Azure subscriptions with Cost Management permissions
 
 ## 🚀 Installation
 
@@ -26,153 +29,253 @@ git clone <your-repo-url>
 cd finops
 ```
 
-2. Verify Python version:
+2. Install Azure Cost CLI:
 ```bash
-python3 --version
+# Using dotnet tool
+dotnet tool install -g azure-cost-cli
+
+# Or download from releases
+# https://github.com/mivano/azure-cost-cli/releases
+```
+
+3. Authenticate with Azure:
+```bash
+az login
 ```
 
 ## 💻 Usage
 
-### Basic Usage
+### Accumulated Cost Analysis
 
-1. Ensure your Azure cost data is in `~/Downloads/finops` directory
-2. Run the aggregation script:
-```bash
-python3 aggregate_azure_cost.py
+Compare accumulated costs between any two months across all subscriptions:
+
+```powershell
+# Navigate to the script directory
+cd finops/azure/cost_analysis/diff_accumulated
+
+# Compare costs between two months
+.\accumulatedCost.ps1 -SourceMonth "2025-11" -TargetMonth "2025-12"
 ```
 
-3. View the generated report:
-```bash
-cat total_amortized_costs_summary.txt
+**Parameters:**
+- `-SourceMonth`: Source month in `YYYY-MM` format (e.g., "2025-11")
+- `-TargetMonth`: Target month in `YYYY-MM` format (e.g., "2025-12")
+
+**Output Files:**
+- `YYYY-MM-SubscriptionName.json` - Raw cost data for each subscription
+- `diff_accumulatedCost-SubscriptionName-YYYY-MM-vs-YYYY-MM.txt` - Clean diff report
+
+### Resource-Level Cost Analysis
+
+Analyze costs at the resource level with anomaly detection:
+
+```powershell
+# Navigate to the script directory
+cd finops/azure/cost_analysis/diff_resource
+
+# Compare resource costs between two months
+.\diff_costByResource.ps1 -SourceMonth "2025-11" -TargetMonth "2025-12"
+
+# With custom thresholds
+.\diff_costByResource.ps1 -SourceMonth "2025-11" -TargetMonth "2025-12" `
+    -SignificantChangeThreshold 0.3 `
+    -MinimumCostThreshold 5.0
 ```
 
-### PowerShell Scripts
+**Parameters:**
+- `-SourceMonth`: Source month in `YYYY-MM` format (required)
+- `-TargetMonth`: Target month in `YYYY-MM` format (required)
+- `-SignificantChangeThreshold`: Percentage threshold for significant changes (default: 0.5 = 50%)
+- `-MinimumCostThreshold`: Minimum cost in currency units to consider (default: 1.0)
 
-The repository also includes several PowerShell scripts for Azure cost analysis:
-
-- `diff_accumulated_stripped_nov_dec.ps1` - Compare November vs December accumulated costs
-- `diff_accumulated_stripped_sept_oct.ps1` - Compare September vs October accumulated costs
-- `diff_resource_nov_dec.ps1` - Resource-level cost comparison (Nov-Dec)
-- `diff_resource_sept_oct.ps1` - Resource-level cost comparison (Sep-Oct)
-- `diff_resource_anomalies.ps1` - Detect cost anomalies in resources
-- `diff_monthly.ps1` - Monthly cost comparisons
-- `diff_accumulated.ps1` - Accumulated cost analysis with ANSI formatting
-- `diff_accumulated_clean.ps1` - Clean accumulated cost reports
-- `diff_accumulated_plain.ps1` - Plain text accumulated cost reports
+**Output Files:**
+- `YYYY-MM-resources-SubscriptionName.json` - Raw resource cost data
+- `diff-resources-top50-SubscriptionName.txt` - Top 50 cost increases with anomalies
 
 ## 📊 Output Report Structure
 
-The generated `total_amortized_costs_summary.txt` includes:
+### Accumulated Cost Reports
 
-### 1. Grand Totals
-Aggregated costs across all subscriptions with overall change metrics
+Clean, ANSI-stripped diff reports showing:
+- Total cost comparison between source and target months
+- Cost breakdown by service
+- Absolute and percentage changes
+- Easy-to-read plain text format
 
-### 2. Per-Subscription Breakdown
-Individual subscription analysis including:
-- November 2025 costs
-- December 2025 costs
-- Absolute change in EUR
-- Percentage change
-- Source file references
+### Resource-Level Reports
 
-### 3. Summary Statistics
-- Count of subscriptions with cost increases
-- Count of subscriptions with cost decreases
-- Average cost per subscription
-- Overall trends
+Comprehensive reports including:
 
-### 4. Month-over-Month Comparison
-Detailed November vs December 2025 analysis with:
-- Total costs for each month
-- Absolute change
-- Percentage change
-- Alert indicators for significant changes
+#### 1. Top 50 Cost Increases
+Table showing resources with the highest cost increases:
+- Service name
+- Resource group
+- Location
+- Source month cost
+- Target month cost
+- Change amount
+- "New?" indicator for newly created resources
+- Full resource name/path
 
-## 📁 File Structure
+#### 2. Summary Section
+- Total costs for new resources and increases
+- Aggregate change metrics
+
+#### 3. Detected Anomalies
+
+**💰 New Costs Detected:**
+- Resources that appeared in the target month
+- Sorted by cost impact
+
+**💸 Costs Removed:**
+- Resources that disappeared in the target month
+- Potential cost savings or decommissioned resources
+
+**📊 Significant Cost Changes:**
+- Resources exceeding the change threshold
+- Both increases and decreases
+- Percentage change calculations
+
+## 📁 Directory Structure
 
 ```
 finops/
-├── aggregate_azure_cost.py                    # Main Python aggregation script
-├── diff_accumulated_stripped_nov_dec.ps1      # PowerShell: Nov-Dec comparison
-├── diff_accumulated_stripped_sept_oct.ps1     # PowerShell: Sep-Oct comparison
-├── diff_resource_nov_dec.ps1                  # PowerShell: Resource costs Nov-Dec
-├── diff_resource_sept_oct.ps1                 # PowerShell: Resource costs Sep-Oct
-├── diff_resource_anomalies.ps1                # PowerShell: Anomaly detection
-├── diff_monthly.ps1                           # PowerShell: Monthly analysis
-├── diff_accumulated.ps1                       # PowerShell: Accumulated costs
-├── diff_accumulated_clean.ps1                 # PowerShell: Clean reports
-├── diff_accumulated_plain.ps1                 # PowerShell: Plain text reports
 ├── README.md                                  # This file
+├── LICENSE                                    # MIT License
 ├── .gitignore                                 # Git ignore rules
-├── requirements.txt                           # Python dependencies
-└── total_amortized_costs_summary.txt          # Generated report (not tracked)
+└── azure/
+    └── cost_analysis/
+        ├── requirements.txt                   # Python dependencies (if needed)
+        ├── diff_accumulated/
+        │   └── accumulatedCost.ps1           # Parameterized accumulated cost comparison
+        └── diff_resource/
+            └── diff_costByResource.ps1       # Parameterized resource-level analysis with anomaly detection
 ```
 
-## 📝 Data Format
+## 📝 Script Details
 
-### Expected Input Files
+### accumulatedCost.ps1
 
-#### Diff Text Files
-Text files with "diff" in filename containing cost comparison tables:
-```
-| TOTAL COSTS | 9,499.42 EUR | 1,620.68 EUR | -7,878.74 EUR |
-```
+**Purpose:** Compare total accumulated costs between two months with clean output
 
-#### JSON Files
-Azure cost data with the following structure:
-```json
-{
-  "totals": {
-    "totalCostInTimeframe": 9499.41754182352
-  },
-  "cost": [...],
-  "byServiceNames": [...],
-  "ByLocation": [...],
-  "ByResourceGroup": [...]
-}
-```
+**Key Features:**
+- Parameterized date ranges (no hardcoded months)
+- Dynamic output file naming with subscription names
+- ANSI escape code stripping for clean text output
+- Box-drawing character replacement
+- Error handling for invalid date formats
+- Processes all subscriptions automatically
+
+**How it works:**
+1. Parses source and target month parameters
+2. Calculates first and last day of each month
+3. Retrieves all Azure subscriptions
+4. For each subscription:
+   - Exports accumulated cost data as JSON
+   - Runs diff comparison using azure-cost CLI
+   - Strips ANSI codes and formatting characters
+   - Saves clean report to text file
+
+### diff_costByResource.ps1
+
+**Purpose:** Detailed resource-level cost analysis with anomaly detection
+
+**Key Features:**
+- Parameterized date ranges and thresholds
+- Composite key handling for non-resource items (refunds, purchases, reservations)
+- Top 50 cost increases focus
+- Automatic anomaly detection with three categories
+- Configurable sensitivity thresholds
+- Summary statistics and totals
+
+**How it works:**
+1. Parses parameters and validates date formats
+2. Retrieves all Azure subscriptions with names
+3. For each subscription:
+   - Exports resource-level cost data for both months
+   - Builds cost maps using composite keys
+   - Identifies resources with cost increases
+   - Detects anomalies (new, removed, significant changes)
+   - Generates formatted report with top 50 increases
+   - Appends anomaly analysis sections
 
 ## 📈 Example Output
 
+### Accumulated Cost Report Example
+
 ```
-================================================================================
-AZURE AMORTIZED COSTS SUMMARY REPORT
-================================================================================
-Generated: 2026-01-12 17:30:00
-Source Directory: /home/user/Downloads/finops
-Total Subscriptions Analyzed: 18
-================================================================================
+Azure Cost Diff (Accumulated)
+Source: (2025-11-01 to 2025-11-30)
+Target: (2025-12-01 to 2025-12-31)
 
-GRAND TOTALS - ALL SUBSCRIPTIONS
---------------------------------------------------------------------------------
-Period                         Total Cost                Change                    % Change            
---------------------------------------------------------------------------------
-November 2025                  50,234.56 EUR                                       
-December 2025                  48,123.45 EUR             -2,111.11 EUR            -4.20%              
---------------------------------------------------------------------------------
+| TOTAL COSTS | 9,499.42 EUR | 1,620.68 EUR | -7,878.74 EUR |
+| Service A   | 5,234.12 EUR | 1,123.45 EUR | -4,110.67 EUR |
+| Service B   | 4,265.30 EUR |   497.23 EUR | -3,768.07 EUR |
+```
 
-PER-SUBSCRIPTION BREAKDOWN
-================================================================================
+### Resource-Level Report Example
 
-SUBSCRIPTION #1: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
---------------------------------------------------------------------------------
-  November 2025:  9,499.42 EUR
-  December 2025:  1,620.68 EUR
-  Change:         -7,878.74 EUR (-82.94%)
-  Diff File:      diff_accumulatedCost-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-stripped.txt
-  Nov JSON:       november-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.json
-  Dec JSON:       december-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.json
+```
+                    Azure Cost Diff (Resource Level)
+                    Source: (2025-11-01 to 2025-11-30)
+                    Target: (2025-12-01 to 2025-12-31)
+
+Service          ResourceGrp    Location    Source         Target         Change         New?  Name
+-------          -----------    --------    ------         ------         ------         ----  ----
+Virtual Machines rg-prod-01     westeurope  1,234.56 EUR   2,345.67 EUR   +1,111.11 EUR       vm-prod-web-01
+Storage          rg-storage     eastus      0.00 EUR       567.89 EUR     +567.89 EUR    YES  storageaccount123
+
+Summary
+-------
+Comparison                          Source           Target           Change
+----------                          ------           ------           ------
+TOTAL COSTS (new + increases)       1,234.56 EUR     2,913.56 EUR     +1,679.00 EUR
+
+=== DETECTED ANOMALIES ===
+
+💰 NEW COSTS DETECTED:
+Resource                Service    Resource Group  Location   November 2025  December 2025  Change
+--------                -------    --------------  --------   -------------  -------------  ------
+storageaccount123       Storage    rg-storage      eastus     0.00 EUR       567.89 EUR     +567.89 EUR
+
+📊 SIGNIFICANT COST CHANGES:
+Resource                Service            Resource Group  Location    November 2025  December 2025  Change          Percent
+--------                -------            --------------  --------    -------------  -------------  ------          -------
+vm-prod-web-01          Virtual Machines   rg-prod-01      westeurope  1,234.56 EUR   2,345.67 EUR   +1,111.11 EUR  +90.00%
+
+Total anomalies detected: 2
 ```
 
 ## 🔧 Configuration
 
-The script uses the following default settings:
-- **Source Directory**: `~/Downloads/finops`
-- **Output File**: `total_amortized_costs_summary.txt`
-- **Currency**: EUR (Euro)
-- **Comparison Months**: November 2025 vs December 2025
+### Default Settings
 
-To modify these settings, edit the constants in [`aggregate_azure_cost.py`](aggregate_azure_cost.py).
+**accumulatedCost.ps1:**
+- Output format: Clean text (ANSI-stripped)
+- File naming: Uses subscription names
+- Date format: YYYY-MM
+
+**diff_costByResource.ps1:**
+- Significant change threshold: 50% (0.5)
+- Minimum cost threshold: 1.0 (currency units)
+- Top results shown: 50 resources
+- Anomaly categories: New costs, removed costs, significant changes
+
+### Customization
+
+Modify thresholds when running the resource analysis:
+
+```powershell
+# More sensitive anomaly detection (30% threshold, 5 EUR minimum)
+.\diff_costByResource.ps1 -SourceMonth "2025-11" -TargetMonth "2025-12" `
+    -SignificantChangeThreshold 0.3 `
+    -MinimumCostThreshold 5.0
+
+# Less sensitive (100% threshold, 10 EUR minimum)
+.\diff_costByResource.ps1 -SourceMonth "2025-11" -TargetMonth "2025-12" `
+    -SignificantChangeThreshold 1.0 `
+    -MinimumCostThreshold 10.0
+```
 
 ## 🤝 Contributing
 
@@ -207,4 +310,10 @@ If you encounter any issues or have suggestions, please file an issue on the Git
 
 ## 🔄 Version History
 
-- **v1.0.0** - Initial release with cost aggregation and reporting features
+- **v2.0.0** - Restructured with parameterized scripts and anomaly detection
+  - Moved to organized directory structure
+  - Parameterized date ranges (no hardcoded months)
+  - Added anomaly detection to resource analysis
+  - Dynamic file naming with subscription names
+  - Improved error handling and validation
+- **v1.0.0** - Initial release with basic cost comparison scripts
